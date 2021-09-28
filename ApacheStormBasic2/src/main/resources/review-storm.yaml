@@ -1,0 +1,38 @@
+name: "review-topologyVersion3"
+
+config:
+  topology.workers: 1
+  topology.tick.tuple.freq.secs: 10 # Send a Tick Tuple every 10 sec - used by Word Summary Bolt
+  topology.max.spout.pending: 15
+  topology.message.timeout.secs: 120 # up the message timeout from default 30s (i.e CPS can take 20s)
+  properties: # Expected topology configurations properties returned by Configurations.resolveProperties()
+  
+    kafka.mapper.zkPort: ${kafka.mapper.zkPort}
+    kafka.mapper.zkServers: ${kafka.mapper.zkServers}
+
+
+# spout definitions
+spouts:
+
+  - id: "sampleTimer-spout"
+    className: "com.rsi.kafka.spout.SampleTimerSpout"
+    parallelism: 1
+    constructorArgs:
+      - 1000
+
+# bolt definitions
+bolts:
+
+  - id: "mapper-bolt"
+    className: "com.rsi.kafka.bolt.MapperBolt"
+    parallelism: 1  
+
+
+#stream definitions
+streams:
+
+  - name: "sampleTimer-spout --> mapper-bolt"
+    from: "sampleTimer-spout"
+    to: "mapper-bolt"
+    grouping:
+      type: SHUFFLE
